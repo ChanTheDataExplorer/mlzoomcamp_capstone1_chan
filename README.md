@@ -1,31 +1,66 @@
-# Project: [Kitchenware Classification](https://www.kaggle.com/competitions/kitchenware-classification/overview)
+# Is it a Spoon? Knife? Plate?...: A ML Project Using Convolutional Neural Networks
 
-## Objectives
-In this competition we want to classify images of different kitchenware items into 6 classes:
--   cups
--   glasses
--   plates
--   spoons
--   forks
--   knives
+In this project, we used Deep Learning to predict if an image is a spoon, knife, plate, cup, glass, or a fork.  
+A total of 4445 images was used to train the model. The model's accuracy is around **95.5%**
+
+![alt text](./docu/images/sample_images.png)
+
+This project was inspired by a [kaggle competition](https://www.kaggle.com/competitions/kitchenware-classification/overview) hosted by [Datatalks](https://datatalks.club/).  
+
+## Project Objective
+
+In this competition we want to classify images of different kitchenware items into 6 classes/labels:
+
+- cups
+- glasses
+- plates
+- spoons
+- forks
+- knives
 
 ## Dataset
-The dataset consist of the following:
+
+Download the image from the [kaggle competition](https://www.kaggle.com/competitions/kitchenware-classification/overview)
+
+The dataset should consist of the following:
+
 - Images
 - train.csv - a csv file with the information on images to be used for the training the model. The fields included are Image ID and the class it belongs to
 - test.csv - a csv file with the list of all the image ID to be used for the prediction
+- sample_submission.csv - a csv file containing the template for submitting the prediction in the competition
+
+Here's the sample directory for successful download of the data:  
+![alt text](./docu/images/dataset_dir.png)
 
 ## Data Preprocessing
-Here are the steps to be done for the pre-processing of the data:
-1. Organize the images dataset so that each images belong to it's respective class based on the train.csv file.
-2. After moving to respective classes. Regroup again the data by train and validation datasets
-3. Optional: Make sure that there are no duplicate images in the images to avoid "overfitting" 
-4. Load the image in the notebook using tensorflow package
+
+To prepare the data for use in training a deep learning model, we will run the dataprep.py file which consists of the following:
+
+- remove duplicate images
+- sort the images into train and test
+- further separate the train folder to train and validation sets (random shuffling with seed = 42)
 
 ## Training the Model
-There are pre-trained Convolutional Neural Network available like ImageNet. However, to adjust the model based on our problem or goal in this project we cannot use it fully.
 
-For that, we will just use a part of the model which is the Convolutional Layer. We will train the dense layer on our own.
+There are pre-trained Convolutional Neural Network available like [ImageNet](https://www.image-net.org/). However, to adjust the model based on our problem or goal in this project we cannot use it fully.  
+For that, we will just use a part of the model which is the convolutional Layer. We are gonna train the model on our own.
+
+Base model. The one with the pre-trained convolutional layer of Imagenet
+
+```python
+base_model = Xception(weights='imagenet', include_top=False, input_shape=(150, 150, 3))
+base_model.trainable = False
+```
+
+Final model. Adding a dense layer to be trained later on
+
+```python
+inputs = keras.Input(shape=(150, 150, 3))
+base = base_model(inputs, training=False)
+vectors = keras.layers.GlobalAveragePooling2D()(base)
+outputs = keras.layers.Dense(<number of classes/labels>)(vectors)
+model = keras.Model(inputs, outputs)
+```
 
 Note: Always check the parameter in the Dense layer `keras.layers.Dense(param)`. Always set it the number of classes we want to identify 
 
