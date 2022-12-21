@@ -120,7 +120,7 @@ In this project, we have tried 2 deployment frameworks:
 2. Kubernetes on Local
 3. Kubernetes on Cloud with AWS EKS
 
-### Docker Deployment
+### Docker-Compose Deployment
 
 Prerequisites:
 
@@ -129,27 +129,29 @@ Prerequisites:
 - dockerfile to be used to build the image for gateway
 - docker-compose.yaml file
 - gateway.py
-- test.py
+- test.py  
 
-1. Build the docker image for the tf serving model image
+Steps:
 
-Dockerfile
-```
+1. Build the dockerfile for the tf serving model image
+2. Run `docker build -t kitchenware-model:xception_v2 -f image-model.dockerfile .` in terminal
+3. Build the docker image for the gateway image
+4. Run `docker build -t kitchenware-gateway:001 -f image-gateway.dockerfile .`
+5. Once all the images are built, we can now run docker-compose `docker-compose up`
+6. Test the framework by running the test file
+
+Dockerfile: TF-Serving Model image
+
+```bash
 FROM tensorflow/serving:2.7.0
 
 COPY converted-model /models/converted_model/1
 ENV MODEL_NAME="kitchenware-model"
 ```
-Run Command in terminal
-```
-docker build \
-	-t kitchenware-model:xception_v2 \
-	-f image-model.dockerfile .
-```
 
-2. Build the docker image for the tf serving model image
-Dockerfile
-```
+Dockerfile: Gateway image
+
+```bash
 FROM python:3.8.12-slim
 
 RUN pip install pipenv
@@ -166,82 +168,86 @@ EXPOSE 9696
 
 ENTRYPOINT ["gunicorn", "--bind=0.0.0.0:9696", "gateway:app"]
 ```
-Run Command in terminal
-```
-docker build \
-	-t kitchenware-gateway:001 \
-	-f image-gateway.dockerfile .
-```
 
-3. Once all the images are built, we can now run docker-compose `docker-compose up -d`
-	* -d for detached mode.
+### Kubernetes Local
 
-4. Test the framework by running the test file
+Prerequisites:
+Create a kube-config folder with the following files:
 
-## Kubernetes Local
+- gateway-deployment.yaml
+- gateway-service.yaml
+- model-deployment.yaml
+- model-service.yaml
+- docker image for the gateway (already created in the docker-compose deployment)
+- docker image for the model (already created in the docker-compose deployment)
+- gat
 
-* Install kubectl and kind first
-* Create a cluster
-		`kind create cluster`
-		
-### Model Deployment & Service
-*Model Deployment*
-* Create a model-deployment.yaml
-* Load docker image into cluster
-		`kind load docker-image image-name`
-* Apply the model deployment to our cluster:
-		`kubectl apply -f model-delpoyment.yaml`
-* (Optional) Test if the pod is working by:
-	* forward the pod's port 
-		`kubectl port-forward insert-pod-name 8500:8500`
-	* run the local gateway script
-		`python3 gateway.py`
-*Model Deployment Service*
-* Create a model-service.yaml
-* Apply the model-service deployment to our cluster:
-		`kubectl apply -f model-service.yaml`
-* (Optional) Test if the service is working by:
-	* forward the service's port 
-		`kubectl port-forward insert-service-name 8500:8500`
-	* run the local gateway script
-		`python3 gateway.py`
-		
-### Gateway Deployment & Service
-*Gateway Deployment*
-* Create a gateway-deployment.yaml
-* Load the docker image into the cluster
-		`kind load docker-image image-name`
-* Apply the gateway deployment to our cluster:
-		`kubectl apply -f model-delpoyment.yaml`
-* (Optional) Test if the pod is working by:
-	* forward the pod's port 
-		`kubectl port-forward insert-pod-name 9696:9696`
-	* run the local gateway script
-		`python3 test.py`
-*Gateway Deployment Service*
-* Create a gateway-service.yaml
-* Apply the model-service deployment to our cluster:
-		`kubectl apply -f gateway-service.yaml`
-* (Optional) Test if the service is working by:
-	* forward the service's port 
-		`kubectl port-forward insert-service-name 9696:9696`
-	* run the local gateway script
-		`python3 test.py`
+Steps:
 
-## Kubernetes AWS EKS
+1. Install kubectl and kind first
+2. Create a cluster using the command `kind create cluster` in the terminal
+
+Once the cluster created, we will create the deployment and service for both the model and the gateway
+
+#### Model Deployment & Service
+
+##### Model Deployment
+
+1. Create a model-deployment.yaml (refer to the model-deployment.yaml file inside the kube-config folder)
+2. Load docker image into cluster using the command `kind load docker-image <image-name>`
+3. Apply the model deployment to our cluster by using the command `kubectl apply -f model-delpoyment.yaml`
+
+(Optional) Test if the pod is working by:
+
+- forward the pod's port using the command `kubectl port-forward insert-pod-name 8500:8500`
+- run the testing script for gateway in the *testing_scripts* folder
+
+##### Model Deployment Service*
+
+1. Create a model-service.yaml (refer to the model-service.yaml file inside the kube-config folder)
+2. Apply the model service to our cluster using the command `kubectl apply -f model-service.yaml`
+
+(Optional) Test if the service is working by:
+
+- forward the service's port using the command `kubectl port-forward insert-service-name 8500:8500`
+- run the testing script for gateway in the *testing_scripts* folder
+
+#### Gateway Deployment & Service
+
+##### Gateway Deployment
+
+1. Create a gateway-deployment.yaml (refer to the gateway-deployment.yaml file inside the kube-config folder)
+2. Load the docker image into the cluster using the command `kind load docker-image <image-name>`
+3. Apply the gateway deployment to our cluster using the command `kubectl apply -f model-delpoyment.yaml`
+
+(Optional) Test if the pod is working by:
+
+- forward the pod's port using the command `kubectl port-forward insert-pod-name 9696:9696`
+- run the `test.py` for test in the *testing_scripts* folder
+
+##### Gateway Deployment Service
+
+1. Create a gateway-service.yaml (refer to the gateway-service.yaml file inside the kube-config folder)
+2. Apply the model-service deployment to our cluster using the command `kubectl apply -f gateway-service.yaml`
+
+(Optional) Test if the service is working by:
+
+- forward the service's port using the command `kubectl port-forward insert-service-name 9696:9696`
+- run the `test.py` for test in the *testing_scripts* folder
+
+### Kubernetes AWS EKS
+
 We will use eksctl to deploy our app in AWS EKS. But, before that, make sure that the following are configured properly:
-* kubectl
-* eksctl
-	* command line tool for working with EKS clusters
-	* installation link
-* aws profile properly configured in the path
 
-1. Create an eks-config.yaml
-2. Publish docker images to ECR
-3. Update the deployments and services yaml files
+- kubectl
+- [eksctl](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html)
+- AWS properly configured in the path: [Check this guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
+
+1. Create an eks-config.yaml (refer to the same file in the kube-config folder)
+2. Publish docker images to ECR [Check this guide](https://github.com/ziritrion/ml-zoomcamp/blob/main/notes/09_serverless.md)
+3. Update the deployments and services yaml files based on the uri of the ECR image
 4. Apply the deployments and services to EKS
-5. Change the url of the test.py file using the external-ip of the gateway service
-		`kubectl get service`
+5. Change the url of the test.py file using the external-ip of the gateway service `kubectl get service`
 
 If the cluster will not be used anymore, run the command below to avoid further charges
 `eksctl delete cluster --name kitchenware-eks`
