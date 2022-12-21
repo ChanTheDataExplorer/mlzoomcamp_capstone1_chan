@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tf-serving-model
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tf-serving-model
+  template:
+    metadata:
+      labels:
+        app: tf-serving-model
+    spec:
+      containers:
+      - name: tf-serving-model
+        image: 560762403195.dkr.ecr.ap-southeast-1.amazonaws.com/kitchenware-model:model-001
+        resources:
+          limits:
+            memory: "512Mi"
+            cpu: "0.5"
+        ports:
+        - containerPort: 8500

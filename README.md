@@ -5,7 +5,7 @@ A total of 4445 images was used to train the model. The model's accuracy is arou
 
 ![alt text](./docu/images/sample_images.png)
 
-This project was inspired by a [kaggle competition](https://www.kaggle.com/competitions/kitchenware-classification/overview) hosted by [Datatalks](https://datatalks.club/).  
+This project was inspired by a [kaggle competition](https://www.kaggle.com/competitions/kitchenware-classification/overview) hosted by [Datatalks.Club](https://datatalks.club/).  
 
 ## Project Objective
 
@@ -42,50 +42,57 @@ To prepare the data for use in training a deep learning model, we will run the d
 
 ## Training the Model
 
-There are pre-trained Convolutional Neural Network available like [ImageNet](https://www.image-net.org/). However, to adjust the model based on our problem or goal in this project we cannot use it fully.  
-For that, we will just use a part of the model which is the convolutional Layer. We are gonna train the model on our own.
+There are pre-trained Convolutional Neural Network available like [ImageNet](https://www.image-net.org/). However, to adjust the model based on our problem or goal, we will not use it fully.  
+Instead, we will just use a part of the model which is the convolutional Layers. We are gonna train the rest of the model in this project ()
 
 Base model. The one with the pre-trained convolutional layer of Imagenet
 
 ```python
-base_model = Xception(weights='imagenet', include_top=False, input_shape=(150, 150, 3))
+base_model = Xception(weights='imagenet', include_top=False, input_shape=(299, 299, 3))
 base_model.trainable = False
 ```
 
-Final model. Adding a dense layer to be trained later on
+Final model. Adding a dense layer and a pool layer to be trained
 
 ```python
-inputs = keras.Input(shape=(150, 150, 3))
+inputs = keras.Input(shape=(299, 299, 3))
 base = base_model(inputs, training=False)
 vectors = keras.layers.GlobalAveragePooling2D()(base)
 outputs = keras.layers.Dense(<number of classes/labels>)(vectors)
 model = keras.Model(inputs, outputs)
 ```
 
-Note: Always check the parameter in the Dense layer `keras.layers.Dense(param)`. Always set it the number of classes we want to identify 
+Note: Always check the parameter in the Dense layer `keras.layers.Dense(param)`. Always set it the number of classes we want to identify.
 
 ## Model Validation and Performance Tuning
-Once our model is trained. we can further tune it with the help of `history` and `checkpointing`
+
+Once our model is trained. we can further tune it with the help of `history` and `checkpointing`.  
 Variables we can optimize:
-* learning rate
-* size of inner layers
-* Regularization and dropout
-* Augmentation
+
+- learning rate
+- size of inner layers
+- Regularization and dropout
+- Augmentation
 
 ## Save the Model
 
-Save the model which can be used for tf-serving
-```
+Saving the model is important in order to make it accessible for consumption of users.
+
+- Once we are finished with the training part, we can just select the best model output from the checkpointing we have done earlier  
+(We can already delete the other `.h5` files)
+
+```python
 import tensorflow as tf
 from tensorflow import keras
 
-model = keras.models.load_model('original_model.h5')
+model = keras.models.load_model('<best_model>.h5')
 
 tf.saved_model.save(model, 'converted_model')
 ```
 
-Run the command `saved_model_cli show --dir converted_model --all` to inspect the content of the tf model. Here's the example
-```
+- Run the command `saved_model_cli show --dir converted_model --all` to inspect the content of the tf model. Here's the example
+
+```bash
 signature_def['serving_default']:
   The given SavedModel SignatureDef contains the following input(s):
     inputs['input_35'] tensor_info:
@@ -99,21 +106,30 @@ signature_def['serving_default']:
         name: StatefulPartitionedCall:0
   Method name is: tensorflow/serving/predict
 ```
+
 Take note of the ff:
-* inputs - in this case input_35
-* outpus - in this case dense_26
 
-Deployment Strategies
+- inputs : in this case input_35
+- outpus : in this case dense_26
 
-Prerequisites:
-* tf serving converted model and the inputs and outputs values
-* dockerfile to be used to build the image for tf serving
-* dockerfile to be used to build the image for gateway
-* docker-compose.yaml file
-* gateway.py
-* test.py
+## Deployment Strategies
+
+In this project, we have tried 2 deployment frameworks:
+
+1. Docker-Compose Deployment
+2. Kubernetes on Local
+3. Kubernetes on Cloud with AWS EKS
 
 ### Docker Deployment
+
+Prerequisites:
+
+- tf serving converted model and the inputs and outputs values
+- dockerfile to be used to build the image for tf serving
+- dockerfile to be used to build the image for gateway
+- docker-compose.yaml file
+- gateway.py
+- test.py
 
 1. Build the docker image for the tf serving model image
 
