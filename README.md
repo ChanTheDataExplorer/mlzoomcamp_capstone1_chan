@@ -1,7 +1,8 @@
 # Is it a Spoon? Knife? Plate?...: A ML Project Using Convolutional Neural Networks
 
 In this project, we used Deep Learning to predict if an image is a spoon, knife, plate, cup, glass, or a fork.  
-A total of 4445 images was used to train the model. The model's accuracy is around **95.5%**
+A total of 4445 images was used to train the model. The model's accuracy is around **95.5%**  
+Click here to [Demo link](http://a21bcf18e0c9844f8bffce0d52e9008c-1602268769.ap-southeast-1.elb.amazonaws.com)
 
 ![alt text](./docu/images/sample_images.png)
 
@@ -244,10 +245,11 @@ We will use eksctl to deploy our app in AWS EKS. But, before that, make sure tha
 - AWS properly configured in the path: [Check this guide](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html)
 
 1. Create an eks-config.yaml (refer to the same file in the kube-config folder)
-2. Publish docker images to ECR [Check this guide](https://github.com/ziritrion/ml-zoomcamp/blob/main/notes/09_serverless.md)
-3. Update the deployments and services yaml files based on the uri of the ECR image
-4. Apply the deployments and services to EKS
-5. Change the url of the test.py file using the external-ip of the gateway service `kubectl get service`
+2. Create EKS cluster using the command `eksctl create cluster -f eks-config.yml`. (Note: Wait for the cluster to be created)
+3. Publish docker images to ECR [Check this guide](https://github.com/ziritrion/ml-zoomcamp/blob/main/notes/09_serverless.md)
+4. Update the deployments and services yaml files based on the uri of the ECR image
+5. Apply the deployments and services to EKS using the command `kubectl apply -f your-yaml-file`
+6. Change the url of the test.py file using the external-ip of the gateway service `kubectl get service`
 
 If the cluster will not be used anymore, run the command below to avoid further charges
 `eksctl delete cluster --name kitchenware-eks`

@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-webapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway-webapp
+  template:
+    metadata:
+      labels:
+        app: gateway-webapp
+    spec:
+      containers:
+      - name: gateway-webapp
+        image: 560762403195.dkr.ecr.ap-southeast-1.amazonaws.com/kitchenware-gateway-webapp:001
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "100m"
+        ports:
+        - containerPort: 9696
+        env:
+          - name: TF_SERVING_HOST
+            value: tf-serving-model.default.svc.cluster.local:8500
