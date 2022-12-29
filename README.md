@@ -2,7 +2,7 @@
 
 In this project, we used Deep Learning to predict if an image is a spoon, knife, plate, cup, glass, or a fork.  
 A total of 4445 images was used to train the model. The model's accuracy is around **95.5%**  
-Click here to [Demo link](http://a21bcf18e0c9844f8bffce0d52e9008c-1602268769.ap-southeast-1.elb.amazonaws.com)
+Click here to [Demo link](http://a21bcf18e0c9844f8bffce0d52e9008c-1602268769.ap-southeast-1.elb.amazonaws.com) (Not Working anymore. I turned down the cluster already)
 
 ![alt text](./docu/images/sample_images.png)
 
